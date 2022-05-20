@@ -10,7 +10,8 @@ class SquareBlurMod(loader.Module):
 	async def squareblurcmd(self, message):
 		"""make image 1:1 ratio"""
 		reply = await message.get_reply_message()
-		if not reply or not reply.file or not reply.file.mime_type.split("/")[0].lower() == "image":
+		if (not reply or not reply.file
+		    or reply.file.mime_type.split("/")[0].lower() != "image"):
 			await message.edit("<b>Reply to image!</b>")
 			return
 		im = io.BytesIO()
@@ -28,6 +29,6 @@ class SquareBlurMod(loader.Module):
 		img = io.BytesIO()
 		img.name = "im.png"
 		bg.save(img)
-		img.seek(0) 
+		img.seek(0)
 		await reply.reply(file=img)
 		await message.delete()

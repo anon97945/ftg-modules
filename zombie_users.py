@@ -116,39 +116,43 @@ async def rm_deletedacc(show):
 async def get_users(show):
     """ For .users command, list all of the users in a chat. """
     info = await show.client.get_entity(show.chat_id)
-    title = info.title if info.title else "this chat"
+    title = info.title or "this chat"
     mentions = 'Users in {}: \n'.format(title)
     try:
         if not show.pattern_match.group(1):
             async for user in show.client.iter_participants(show.chat_id):
-                if not user.deleted:
-                    mentions += f"\n[{user.first_name}](tg://user?id={user.id}) `{user.id}`"
-                else:
-                    mentions += f"\nDeleted Account `{user.id}`"
+                mentions += (
+                    f"\nDeleted Account `{user.id}`"
+                    if user.deleted
+                    else f"\n[{user.first_name}](tg://user?id={user.id}) `{user.id}`"
+                )
+
         else:
             searchq = show.pattern_match.group(1)
             async for user in show.client.iter_participants(
                     show.chat_id, search=f'{searchq}'):
-                if not user.deleted:
-                    mentions += f"\n[{user.first_name}](tg://user?id={user.id}) `{user.id}`"
-                else:
-                    mentions += f"\nDeleted Account `{user.id}`"
+                mentions += (
+                    f"\nDeleted Account `{user.id}`"
+                    if user.deleted
+                    else f"\n[{user.first_name}](tg://user?id={user.id}) `{user.id}`"
+                )
+
     except ChatAdminRequiredError as err:
-        mentions += " " + str(err) + "\n"
+        mentions += f" {str(err)}" + "\n"
     try:
         await show.edit(mentions)
     except MessageTooLongError:
         await show.edit(
             "Damn, this is a huge group. Uploading users lists as file.")
-        file = open("userslist.txt", "w+")
-        file.write(mentions)
-        file.close()
+        with open("userslist.txt", "w+") as file:
+            file.write(mentions)
         await show.client.send_file(
             show.chat_id,
             "userslist.txt",
-            caption='Users in {}'.format(title),
+            caption=f'Users in {title}',
             reply_to=show.id,
         )
+
         remove("userslist.txt")
 
 
@@ -156,7 +160,7 @@ async def get_user_from_event(event):
     """ Get the user from argument or replied message. """
     args = event.pattern_match.group(1).split(':', 1)
     extra = None
-    if event.reply_to_msg_id and not len(args) == 2:
+    if event.reply_to_msg_id and len(args) != 2:
         previous_message = await event.get_reply_message()
         user_obj = await event.client.get_entity(previous_message.from_id)
         extra = event.pattern_match.group(1)
