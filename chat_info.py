@@ -85,9 +85,7 @@ async def get_user_from_id(user, event):
 async def get_user_from_event(event: NewMessage.Event, **kwargs):
     """ Get the user from argument or replied message. """
     reply_msg: Message = await event.get_reply_message()
-    user = kwargs.get('user', None)
-
-    if user:
+    if user := kwargs.get('user', None):
         # First check for a user id
         if user.isnumeric():
             user = int(user)
@@ -109,7 +107,6 @@ async def get_user_from_event(event: NewMessage.Event, **kwargs):
         except (TypeError, ValueError) as err:
             return None
 
-    # Check for a forwarded message
     elif (reply_msg and
           reply_msg.forward and
           reply_msg.forward.sender_id and
@@ -117,12 +114,10 @@ async def get_user_from_event(event: NewMessage.Event, **kwargs):
         forward = reply_msg.forward
         replied_user = await event.client(GetFullUserRequest(forward.sender_id))
 
-    # Check for a replied to message
     elif event.reply_to_msg_id:
         previous_message = await event.get_reply_message()
         replied_user = await event.client(GetFullUserRequest(previous_message.from_id))
 
-    # Last case scenario is to get the current user
     else:
         self_user = await event.client.get_me()
         replied_user = await event.client(GetFullUserRequest(self_user.id))
@@ -132,9 +127,7 @@ async def get_user_from_event(event: NewMessage.Event, **kwargs):
 
 async def get_chat_from_event(event: NewMessage.Event, **kwargs):
     reply_msg: Message = await event.get_reply_message()
-    chat = kwargs.get('chat', None)
-
-    if chat:
+    if chat := kwargs.get('chat', None):
         try:
             input_entity = await event.client.get_input_entity(chat)
             if isinstance(input_entity, InputPeerChannel):
@@ -145,8 +138,6 @@ async def get_chat_from_event(event: NewMessage.Event, **kwargs):
                 return None
         except(TypeError, ValueError):
             return None
-    # elif reply_msg and reply_msg.forward:
-    #     return None
     else:
         chat = await event.get_chat()
         return await event.client(GetFullChannelRequest(chat.id))
@@ -154,7 +145,7 @@ async def get_chat_from_event(event: NewMessage.Event, **kwargs):
 
 async def list_admins(event):
     adms = await event.client.get_participants(event.chat, filter=ChannelParticipantsAdmins)
-    adms = map(lambda x: x if not x.bot else None, adms)
+    adms = map(lambda x: None if x.bot else x, adms)
     adms = [i for i in list(adms) if i]
     return adms
 
@@ -165,10 +156,7 @@ async def list_bots(event):
 
 
 def make_mention(user):
-    if user.username:
-        return f"@{user.username}"
-    else:
-        return inline_mention(user)
+    return f"@{user.username}" if user.username else inline_mention(user)
 
 
 def inline_mention(user):
@@ -179,8 +167,7 @@ def inline_mention(user):
 def user_full_name(user):
     names = [user.first_name, user.last_name]
     names = [i for i in list(names) if i]
-    full_name = ' '.join(names)
-    return full_name
+    return ' '.join(names)
 
 
 class FormattedBase:
@@ -331,7 +318,7 @@ async def fetch_info(event, full_chat, **kwargs):
 
     is_private = False
     if isinstance(chat, Channel) and chat.username:
-        name = chat.title if chat.title else chat.username
+        name = chat.title or chat.username
         title = Link(name, f"https://t.me/{chat.username}")
     elif chat.title:
         is_private = True

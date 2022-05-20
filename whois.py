@@ -125,9 +125,8 @@ async def fetch_info(replied_user, event):
         "\u2060", "") if first_name else ("This User has no First Name")
     last_name = last_name.replace(
         "\u2060", "") if last_name else ("This User has no Last Name")
-    username = "@{}".format(username) if username else (
-        "This User has no Username")
-    user_bio = "This User has no About" if not user_bio else user_bio
+    username = f"@{username}" if username else "This User has no Username"
+    user_bio = user_bio or "This User has no About"
 
     caption = "<b>USER INFO:</b>\n\n"
     caption += f"First Name: {first_name}\n"
@@ -141,7 +140,7 @@ async def fetch_info(replied_user, event):
     caption += f"ID: <code>{user_id}</code>\n\n"
     caption += f"Bio: \n<code>{user_bio}</code>\n\n"
     caption += f"Common Chats with this user: {common_chat}\n"
-    caption += f"Permanent Link To Profile: "
+    caption += "Permanent Link To Profile: "
     caption += f"<a href=\"tg://user?id={user_id}\">{first_name}</a>"
 
     return photo, caption

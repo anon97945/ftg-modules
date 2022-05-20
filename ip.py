@@ -22,8 +22,8 @@ class IPLookupMod(loader.Module):
         lookup = get(f"http://ip-api.com/json/{ip}").json()
         fixed_lookup = {}
 
+        special = {"lat": "Latitude", "lon": "Longitude", "isp": "ISP", "as": "AS", "asname": "AS name"}
         for key, value in lookup.items():
-            special = {"lat": "Latitude", "lon": "Longitude", "isp": "ISP", "as": "AS", "asname": "AS name"}
             if key in special:
                 fixed_lookup[special[key]] = str(value)
                 continue
@@ -39,6 +39,6 @@ class IPLookupMod(loader.Module):
         text = ""
 
         for key, value in fixed_lookup.items():
-            text = text + f"<b>{key}:</b> <code>{value}</code>\n"
+            text = f"{text}<b>{key}:</b> <code>{value}</code>\n"
 
         await utils.answer(message, text)

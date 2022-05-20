@@ -35,12 +35,11 @@ class GlitchMod(loader.Module):
         replied = await message.get_reply_message()
         args = utils.get_args(message)
         input_ = 3
-        if args:
-            if args[0].isdigit():
-                input_ = int(args[0])
-                if input_ < 0 or input_ > 9:
-                    await message.edit(self.strings['out_of_range'])
-                    return
+        if args and args[0].isdigit():
+            input_ = int(args[0])
+            if input_ < 0 or input_ > 9:
+                await message.edit(self.strings['out_of_range'])
+                return
         if not (replied and (
             replied.photo or replied.sticker or replied.gif)):
             await message.edit(self.strings['media_not_found'])
@@ -50,7 +49,7 @@ class GlitchMod(loader.Module):
             return
         await message.edit(self.strings['processing'])
         ext = ".gif" if "g" in args else ".png"
-        file_to_process = await self.client.download_media(replied, 'to_glitch' + ext)
+        file_to_process = await self.client.download_media(replied, f'to_glitch{ext}')
         self.glitcher = ImageGlitcher()
         glitched = self.glitch(str(file_to_process), input_, ext[1:])
         await self.client.send_file(message.to_id, glitched)
@@ -62,7 +61,7 @@ class GlitchMod(loader.Module):
     def glitch(self,filename: str, range_:int, glitch_type: str) -> str:
         """ returns filename of glitched gif/pic """
         img = Image.open(filename)
-        glitched_filename = "glitched_" + filename
+        glitched_filename = f"glitched_{filename}"
         if glitch_type == self.type_gif:
             return self.glitch_to_gif(img, range_, glitched_filename)
         elif glitch_type == self.type_pic:

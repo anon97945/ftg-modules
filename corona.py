@@ -35,29 +35,25 @@ class CoronaReportsMod(loader.Module):
     async def coronacmd(self, message):
         """.corona <country (Optional)>"""
         args = utils.get_args_raw(message)
-        if not args:
-            country = self.config["DEFAULT_COUNTRY"]
-        else:
-            country = args
-            
+        country = args or self.config["DEFAULT_COUNTRY"]
         message = await utils.answer(message, "<code>Visiting  Wuhan...</code>")
 
-        url = "https://covid19.mathdro.id/api/countries/" + country
+        url = f"https://covid19.mathdro.id/api/countries/{country}"
         tries = 0
         response = requests.get(url)
 
         while response.status_code == 400 and tries < 10:
             response = requests.get(url)
             tries += 1
-            await utils.answer(message, "<code>Try #" + str(tries) + "...</code>")
+            await utils.answer(message, f"<code>Try #{tries}...</code>")
 
         jsonDumps = json.dumps(response.json(), sort_keys=True)
         jsonResponse = json.loads(jsonDumps)
 
-        if(response.status_code == 200):
+        if (response.status_code == 200):
             confirmed = jsonResponse['confirmed']['value']
             recovered = jsonResponse['recovered']['value']
-            deaths = jsonResponse['deaths']['value']       
+            deaths = jsonResponse['deaths']['value']
             active = confirmed - recovered - deaths
 
             try:
@@ -67,9 +63,9 @@ class CoronaReportsMod(loader.Module):
                 lastUpdate = jsonResponse['lastUpdate']
 
             msg = "<s>-------------------------------------</s>\n";
-            msg += "👑🦠 in "+ country.capitalize() + "<i> "+lastUpdate+"</i>\n"
+            msg += f"👑🦠 in {country.capitalize()}<i> {lastUpdate}" + "</i>\n"
             msg += "<s>-------------------------------------</s>\n";
-            msg+= "<b>😷 Confirmed:</b> " + str(confirmed)
+            msg += f"<b>😷 Confirmed:</b> {str(confirmed)}"
             msg+= "\n<b>🤧 Active:</b> " + str(active) + " (" + str(round(active/confirmed * 100, 2)) + "%)"
             msg+= "\n<b>🏥 Recovered:</b> " + str(recovered) + " (" + str(round(recovered/confirmed * 100, 2)) + "%)"
             msg+= "\n<b>💀 Deaths:</b> " + str(deaths) + " (" + str(round(deaths/confirmed * 100, 2)) + "%)"
